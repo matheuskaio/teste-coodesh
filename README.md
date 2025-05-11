@@ -1,89 +1,241 @@
-# Backend Challenge 20230105
+# 🥗 Backend Challenge 20230105 - OpenFood Sync API
 
-## Introdução
+API RESTful construída em Laravel 12 para importar, listar e gerenciar produtos alimentícios do projeto [Open Food Facts](https://br.openfoodfacts.org/).
 
-Nesse desafio trabalharemos no desenvolvimento de uma REST API para utilizar os dados do projeto Open Food Facts, que é um banco de dados aberto com informação nutricional de diversos produtos alimentícios.
+> This is a challenge by [Coodesh](https://coodesh.com/)
 
-O projeto tem como objetivo dar suporte a equipe de nutricionistas da empresa Fitness Foods LC para que eles possam revisar de maneira rápida a informação nutricional dos alimentos que os usuários publicam pela aplicação móvel.
+---
 
-### Antes de começar
- 
-- O projeto deve utilizar a Linguagem específica na avaliação. Por exempo: Python, R, Scala e entre outras;
-- Considere como deadline da avaliação a partir do início do teste. Caso tenha sido convidado a realizar o teste e não seja possível concluir dentro deste período, avise a pessoa que o convidou para receber instruções sobre o que fazer.
-- Documentar todo o processo de investigação para o desenvolvimento da atividade (README.md no seu repositório); os resultados destas tarefas são tão importantes do que o seu processo de pensamento e decisões à medida que as completa, por isso tente documentar e apresentar os seus hipóteses e decisões na medida do possível.
+## 📋 Descrição
 
-## O projeto
- 
-- Criar um banco de dados MongoDB usando Atlas: https://www.mongodb.com/cloud/atlas ou algum Banco de Dados SQL se não sentir confortável com NoSQL;
-- Criar uma REST API com as melhores práticas de desenvolvimento, Design Patterns, SOLID e DDD.
-- Integrar a API com o banco de dados criado para persistir os dados
-- Recomendável usar Drivers oficiais para integração com o DB
-- Desenvolver Testes Unitários
+A API tem como objetivo fornecer suporte à equipe de nutricionistas da empresa Fitness Foods LC, permitindo que acessem e validem dados nutricionais dos produtos alimentícios cadastrados pelos usuários no aplicativo.
 
-### Modelo de Dados:
+---
 
-Para a definição do modelo, consultar o arquivo [products.json](./products.json) que foi exportado do Open Food Facts, um detalhe importante é que temos dois campos personalizados para poder fazer o controle interno do sistema e que deverão ser aplicados em todos os alimentos no momento da importação, os campos são:
+## 🚀 Tecnologias utilizadas
 
-- `imported_t`: campo do tipo Date com a dia e hora que foi importado;
-- `status`: campo do tipo Enum com os possíveis valores draft, trash e published;
+-   PHP 8.2 + Laravel 12
+-   MySQL (via Docker)
+-   Composer
+-   Docker + Docker Compose
+-   PHPUnit
+-   Swagger (OpenAPI 3.0)
+-   Mailhog (simulação de e-mails)
+-   Laravel Scheduler (cron jobs)
 
-### Sistema do CRON
+---
 
-Para prosseguir com o desafio, precisaremos criar na API um sistema de atualização que vai importar os dados para a Base de Dados com a versão mais recente do [Open Food Facts](https://br.openfoodfacts.org/data) uma vez ao día. Adicionar aos arquivos de configuração o melhor horário para executar a importação.
+## 🔧 Instalação e uso
 
-A lista de arquivos do Open Food, pode ser encontrada em: 
+### 1. Clone o repositório
 
-- https://challenges.coode.sh/food/data/json/index.txt
-- https://challenges.coode.sh/food/data/json/data-fields.txt
+```bash
+git clone https://github.com/seu-usuario/openfood-sync.git
+cd openfood-sync
+```
 
-Onde cada linha representa um arquivo que está disponível em https://challenges.coode.sh/food/data/json/{filename}.
+### 2. Copie o `.env` e configure
 
-É recomendável utilizar uma Collection secundária para controlar os históricos das importações e facilitar a validação durante a execução.
+```bash
+cp .env.example .env
+```
 
-Ter em conta que:
+### 3. Suba o ambiente com Docker
 
-- Todos os produtos deverão ter os campos personalizados `imported_t` e `status`.
-- Limitar a importação a somente 100 produtos de cada arquivo.
+```bash
+docker-compose up -d --build
+```
 
-### A REST API
+### 4. Instale as dependências no container
 
-Na REST API teremos um CRUD com os seguintes endpoints:
+```bash
+docker exec -it laravel-app composer install
+docker exec -it laravel-app php artisan migrate
+```
 
- - `GET /`: Detalhes da API, se conexão leitura e escritura com a base de dados está OK, horário da última vez que o CRON foi executado, tempo online e uso de memória.
- - `PUT /products/:code`: Será responsável por receber atualizações do Projeto Web
- - `DELETE /products/:code`: Mudar o status do produto para `trash`
- - `GET /products/:code`: Obter a informação somente de um produto da base de dados
- - `GET /products`: Listar todos os produtos da base de dados, adicionar sistema de paginação para não sobrecarregar o `REQUEST`.
+---
 
-## Extras
+## 📅 Agendamento automático
 
-- **Diferencial 1** Configuração de um endpoint de busca com Elastic Search ou similares;
-- **Diferencial 2** Configurar Docker no Projeto para facilitar o Deploy da equipe de DevOps;
-- **Diferencial 3** Configurar um sistema de alerta se tem algum falho durante o Sync dos produtos;
-- **Diferencial 4** Descrever a documentação da API utilizando o conceito de Open API 3.0;
-- **Diferencial 5** Escrever Unit Tests para os endpoints  GET e PUT do CRUD;
-- **Diferencial 6** Escrever um esquema de segurança utilizando `API KEY` nos endpoints. Ref: https://learning.postman.com/docs/sending-requests/authorization/#api-key
+O sistema executa um cron todos os dias às **3h da manhã**, que:
 
+-   Acessa os arquivos delta do Open Food Facts
+-   Importa até 100 produtos por arquivo
+-   Salva o histórico de importação
 
+Você pode testar manualmente com:
 
-## Readme do Repositório
+```bash
+docker exec -it laravel-scheduler php artisan schedule:run
+```
 
-- Deve conter o título do projeto
-- Uma descrição sobre o projeto em frase
-- Deve conter uma lista com linguagem, framework e/ou tecnologias usadas
-- Como instalar e usar o projeto (instruções)
-- Não esqueça o [.gitignore](https://www.toptal.com/developers/gitignore)
-- Se está usando github pessoal, referencie que é um challenge by coodesh:  
+---
 
->  This is a challenge by [Coodesh](https://coodesh.com/)
+## 🔐 Autenticação por API Key
 
-## Finalização e Instruções para a Apresentação
+Adicione o header abaixo em todas as requisições:
 
-1. Adicione o link do repositório com a sua solução no teste
-2. Adicione o link da apresentação do seu projeto no README.md.
-3. Verifique se o Readme está bom e faça o commit final em seu repositório;
-4. Envie e aguarde as instruções para seguir. Sucesso e boa sorte. =)
+```http
+X-API-KEY: sua_chave_configurada
+```
 
-## Suporte
+---
 
-Use a [nossa comunidade](https://discord.gg/rdXbEvjsWu) para tirar dúvidas sobre o processo ou envie uma mensagem diretamente a um especialista no chat da plataforma. 
+## 🧪 Testes
+
+Execute os testes com:
+
+```bash
+docker exec -it laravel-app php artisan test
+```
+
+---
+
+## 🧾 Documentação da API
+
+A documentação está disponível no formato [OpenAPI 3.0 (swagger.json)](./swagger.json)
+
+Você pode visualizar em:
+
+-   https://editor.swagger.io
+-   Postman > Import > raw file
+
+---
+
+## 📂 Endpoints principais
+
+-   `GET /` — Status do sistema
+-   `GET /products` — Lista paginada de produtos
+-   `GET /products/{code}` — Detalhes de um produto
+-   `PUT /products/{code}` — Atualizar produto
+-   `DELETE /products/{code}` — Marcar como `trash`
+
+---
+
+## 📧 Notificações de erro
+
+Falhas no sync enviam e-mail para o administrador configurado.
+
+---
+
+## 📝 Histórico de importações
+
+Verifique a última execução da importação via endpoint `/`, campo `last_cron_run`.
+
+---
+
+---
+
+## ⚙️ Arquivo .env
+
+Renomeie o arquivo `.env.example` para `.env`:
+
+```bash
+cp .env.example .env
+```
+
+### ✉️ Configuração do MailHog
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+MAIL_FROM_ADDRESS=noreply@openfoodapi.com
+MAIL_FROM_NAME="OpenFood Sync"
+```
+
+### 🛢️ Configuração do MySQL
+
+```
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=root
+DB_PASSWORD=root
+```
+
+### 🔐 Chave de autenticação
+
+```
+API_KEY=supersecreta123
+```
+
+---
+
+## 🧭 Passo a Passo
+
+### 1. Subir os Containers
+
+Navegue até a pasta raiz do projeto (onde está o arquivo `docker-compose.yml`) e execute:
+
+```bash
+docker compose up -d --build
+```
+
+_Aguarde até que todos os serviços estejam rodando_
+
+---
+
+### 2. Configurar o Projeto Laravel
+
+Após os containers estarem ativos, acesse o container principal:
+
+```bash
+docker exec -it app bash
+```
+
+Dentro do container, execute os seguintes comandos:
+
+#### 2.1. Ajustar permissões
+
+```bash
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+```
+
+#### 2.2. Executar migrações do banco de dados
+
+```bash
+php artisan migrate
+```
+
+#### 2.3. Gerar o valor da APP_KEY
+
+```bash
+php artisan key:generate
+```
+
+#### 2.4. Executar a importação dos produtos manualmente (opcional)
+
+```bash
+php artisan openfood:import
+```
+
+#### 2.5. Sair do container
+
+```bash
+exit
+```
+
+---
+
+### 3. Testar a Aplicação
+
+Acesse o endpoint de status para verificar se a API está funcionando:
+
+```
+GET http://localhost:8080/api/status
+```
+
+Resposta esperada:
+
+```json
+{
+    "status": "OK",
+    "database_connection": "OK",
+    "last_cron_run": "Nunca executado",
+    "uptime": "0 seconds",
+    "memory_usage_mb": 20
+}
+```

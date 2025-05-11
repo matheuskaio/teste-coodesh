@@ -1,0 +1,179 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenFood Sync API",
+    "description": "API para importar, listar e manipular produtos do Open Food Facts.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Equipe OpenFood Sync",
+      "email": "suporte@openfoodapi.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api",
+      "description": "Ambiente local de desenvolvimento"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Verificar status da API",
+        "tags": [
+          "Sistema"
+        ],
+        "responses": {
+          "200": {
+            "description": "Status geral do sistema"
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Listar todos os produtos com paginação",
+        "tags": [
+          "Produtos"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Quantidade de produtos por página"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de produtos"
+          }
+        }
+      }
+    },
+    "/products/{code}": {
+      "get": {
+        "summary": "Obter um produto pelo código",
+        "tags": [
+          "Produtos"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto encontrado"
+          },
+          "404": {
+            "description": "Produto não encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar um produto existente",
+        "tags": [
+          "Produtos"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_name": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "published",
+                      "trash"
+                    ]
+                  },
+                  "serving_quantity": {
+                    "type": "number"
+                  },
+                  "nutriscore_score": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto atualizado com sucesso"
+          },
+          "404": {
+            "description": "Produto não encontrado"
+          },
+          "422": {
+            "description": "Dados inválidos"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Marcar produto como trash",
+        "tags": [
+          "Produtos"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto marcado como excluído"
+          },
+          "404": {
+            "description": "Produto não encontrado"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
+}
